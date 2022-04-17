@@ -3,6 +3,40 @@ from wordle import Feedback, FeedbackLetter, Color, KnownSolutionFeedbackProvide
 
 class WordleTest(unittest.TestCase):
 
+    def test_best_eliminator_word_2(self):
+        generator = BasicGuessGenerator([
+            'HELLO',
+            'DEPOT',
+            'TENET',
+            'CHOKE',
+            'SHARD'
+        ]) 
+
+        self.assertEqual(generator.best_eliminator_word_2(), 'DEPOT')
+
+    def test_letter_frequencies(self):
+        generator = BasicGuessGenerator([
+            'HELLO',
+        ]) 
+
+        frequencies = generator.letter_frequencies_in_possible_solutions()
+        self.assertTrue(('H',1) in frequencies)
+        self.assertTrue(('E',1) in frequencies)
+        self.assertTrue(('L',1) in frequencies)
+        self.assertTrue(('O',1) in frequencies)
+
+        generator = BasicGuessGenerator([
+            'HELLO',
+            'HHHHH',
+            'LLLLL'
+        ]) 
+
+        frequencies = generator.letter_frequencies_in_possible_solutions()
+        self.assertTrue(('H',2) in frequencies)
+        self.assertTrue(('E',1) in frequencies)
+        self.assertTrue(('L',2) in frequencies)
+        self.assertTrue(('O',1) in frequencies)
+
     def test_known_solution_feedback_provider(self):
         feedback_provider = KnownSolutionFeedbackProvider('TENET')
         self.assertEqual(feedback_provider.reveal('TENET').to_color_str(), 'GGGGG')
@@ -65,6 +99,13 @@ class WordleTest(unittest.TestCase):
             'HALED',
             'HXLEX'
         ])
+
+        feedback_history = generator.feedback_history_for_testing()
+        print(feedback_history)
+        self.assertTrue(feedback_history[Color.GREEN]['H'][0])
+        self.assertTrue(feedback_history[Color.YELLOW]['E'][1])
+        self.assertTrue(feedback_history[Color.GREEN]['L'][2])
+        self.assertTrue(feedback_history[Color.GREY]['O'][4])
 
 
 if __name__ == '__main__':
