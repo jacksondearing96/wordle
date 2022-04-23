@@ -70,6 +70,24 @@ class Feedback:
     def is_solution(self):
         return len(self.letters) == 5 and all(l.color == Color.GREEN for l in self.letters)
 
+    def build_from_str(self, input: str):
+        if len(input) == 5:
+            'Feedback was not 5 characters long, please try again.'
+        for i in range(0, len(input)):
+            l = input[i]
+            color = None
+            if l == 'G':
+                color = Color.GREEN
+            elif l == 'Y':
+                color = Color.YELLOW
+            elif l == 'g':
+                color = Color.GREY
+            else:
+                print('Illegal character input ' + l + '. Please only use letters from [G=green, Y=yellow, g=grey]')
+            self.letters[i].position = i
+            self.letters[i].color = color
+
+
 
 def print_game_result(game_result: GameResult):
     print('🤖 WoBo found the solution!')
@@ -80,6 +98,18 @@ def print_game_result(game_result: GameResult):
 class FeedbackProvider:
     def reveal(self, word: str):
         pass
+
+
+class RealtimeFeedbackProvider:
+
+    def __init__(self):
+        pass
+
+    def reveal(self, word: str) -> Feedback:
+        feedback = Feedback(word)
+        feedback_str = input('Please enter feedback (G=green,Y=yellow,g=grey): ')
+        feedback.build_from_str(feedback_str)
+        return feedback
 
 
 class KnownSolutionFeedbackProvider:
@@ -134,8 +164,9 @@ class RandomGuessGenerator:
 
 class BasicGuessGenerator:
 
-    def __init__(self, dictionary: list[str]):
-        self.guess_count = 1
+    def __init__(self, dictionary: list[str], prompt: bool = False):
+        self.guess_count : int = 1
+        self.prompt : bool = prompt
         self.possible_solutions = copy.deepcopy(dictionary)
         self.dictionary = copy.deepcopy(dictionary)
         self.feedback_history = {
@@ -158,41 +189,15 @@ class BasicGuessGenerator:
         if len(self.possible_solutions) == 0:
             print('*** ERROR *** No more possibilities!')
         
-        if self.guess_count == 1:
-            # best_guess = 'ADIEU'
-            best_guess = self.best_eliminator_word_2()
-        elif len(self.possible_solutions) > 3:
+        if len(self.possible_solutions) > 3:
             best_guess = self.best_eliminator_word_2()
         else:
             best_guess = self.possible_solutions[0]
 
         self.guess_count += 1
+        if self.prompt:
+            print('Make guess: ' + best_guess)
         return best_guess
-
-    # def best_eliminator_word(self) -> str:
-    #     frequencies = map(lambda x: x[0], self.letter_frequencies_in_possible_solutions())
-    #     non_green_frequencies = list(filter(lambda x: x not in self.feedback_history[Color.GREEN], frequencies))
-
-    #     valuable_letters = {}
-    #     for _ in range(0, 4):
-    #         valuable_letters[non_green_frequencies[0]] = True
-    #         non_green_frequencies.pop(0)
-
-    #     MATCHES_REQUIRED = 4
-    #     iter = 1
-    #     while True:
-    #         if iter == 3:
-    #             MATCHES_REQUIRED = 3
-    #         for word in self.dictionary:
-    #             letter_matches = 0
-    #             for l in word:
-    #                 if l in valuable_letters:
-    #                     letter_matches += 1
-    #             if letter_matches >= MATCHES_REQUIRED:
-    #                 return word
-    #         valuable_letters[non_green_frequencies[0]] = True
-    #         non_green_frequencies.pop(0)
-    #         iter += 1
 
     def have_seen(self, letter: str, color: Color):
         return letter in self.feedback_history[color]
@@ -268,15 +273,6 @@ class BasicGuessGenerator:
                 letters_to_frequencies[l].add_total_frequency()
                 
         return letters_to_frequencies
-
-    def letter_frequencies_in_possible_solutions(self):
-        '''Returns a tuple of (letter, frequency) for each letter in possible_solutions.'''
-        letters_and_counts = self.frequencies_map() 
-        ret = []
-        for l in letters_and_counts:
-            ret.append((l, letters_and_counts[l]))
-        ret = sorted(ret, key=lambda x: x[1], reverse=True)
-        return ret
 
     def score_sort(self):
         self.possible_solutions = sorted(self.possible_solutions, key=lambda x: self.learn_score(x), reverse=True)
@@ -366,6 +362,10 @@ def play_wordle(guess_generator, feedback_provider) -> GameResult:
     assert feedback.is_solution()
     game_result = GameResult(guesses=guesses,solution=feedback.to_word())
     # print_game_result(game_result)
+    i = 0
+    while i < 1000000:
+        print('🤖', end='')
+        i += 1
     return game_result
 
 
@@ -428,10 +428,14 @@ def experiment():
         print(str(i) + ":" + str(mean))
 
 
+def play_wordle_realtime():
+    play_wordle(BasicGuessGenerator(get_dictionary(), prompt=True), RealtimeFeedbackProvider())
+
 
 if __name__ == '__main__':
     # experiment()
     # play_wordle_with_known_solution('FOUND')
-    test_against_all_known_solutions()
+    # test_against_all_known_solutions()
+    play_wordle_realtime()
     # print((2 * 2 + 17 * 3 + 23 * 4 + 10 * 5 + 9 * 6) / 63)
     # BasicGuessGenerator(ge=t_dictionary())

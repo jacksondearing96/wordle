@@ -14,28 +14,6 @@ class WordleTest(unittest.TestCase):
 
         self.assertEqual(generator.best_eliminator_word_2(), 'DEPOT')
 
-    def test_letter_frequencies(self):
-        generator = BasicGuessGenerator([
-            'HELLO',
-        ]) 
-
-        frequencies = generator.letter_frequencies_in_possible_solutions()
-        self.assertTrue(('H',1) in frequencies)
-        self.assertTrue(('E',1) in frequencies)
-        self.assertTrue(('L',1) in frequencies)
-        self.assertTrue(('O',1) in frequencies)
-
-        generator = BasicGuessGenerator([
-            'HELLO',
-            'HHHHH',
-            'LLLLL'
-        ]) 
-
-        frequencies = generator.letter_frequencies_in_possible_solutions()
-        self.assertTrue(('H',2) in frequencies)
-        self.assertTrue(('E',1) in frequencies)
-        self.assertTrue(('L',2) in frequencies)
-        self.assertTrue(('O',1) in frequencies)
 
     def test_known_solution_feedback_provider(self):
         feedback_provider = KnownSolutionFeedbackProvider('TENET')
@@ -70,6 +48,11 @@ class WordleTest(unittest.TestCase):
         feedback.letters[3].color = Color.GREEN
         feedback.letters[4].color = Color.GREEN
         self.assertTrue(feedback.is_solution())
+
+        feedback = Feedback('DEPOT')
+        feedback.build_from_str('GggYg')
+        self.assertEqual(feedback.to_word(), 'DEPOT')
+        self.assertEqual(feedback.to_color_str(), 'GggYg')
 
     def test_basic_guess_generator(self):
         generator = BasicGuessGenerator([
